@@ -109,7 +109,7 @@ def load_my_model():
     if not os.path.exists(checkpoint_file):
         import urllib.request
         # SEM VLOŽTE VAŠI ZKOPÍROVANOU URL ADRESU Z GITHUB RELEASE!
-        url = "https://github.com"
+        url = "https://://github.comcbaidam/AI-Quarter/releases/download/1.2-6.80Mil-B/model.pt"
         with str_lib.spinner("📥 Stahuji 43MB model Czechia AI Quarter 1.2 z cloudu..."):
             urllib.request.urlretrieve(url, checkpoint_file)
             
