@@ -104,9 +104,15 @@ class GPTLanguageModel(nn.Module):
 @str_lib.cache_resource
 def load_my_model():
     checkpoint_file = "model.pt"
-    if not os.path.exists(checkpoint_file):
-        return None, None
     
+    # KOUZLO: Pokud soubor ještě na serveru Streamlitu neleží, stáhne se z vašeho GitHub Release!
+    if not os.path.exists(checkpoint_file):
+        import urllib.request
+        # SEM VLOŽTE VAŠI ZKOPÍROVANOU URL ADRESU Z GITHUB RELEASE!
+        url = "https://github.com"
+        with str_lib.spinner("📥 Stahuji 43MB model Czechia AI Quarter 1.2 z cloudu..."):
+            urllib.request.urlretrieve(url, checkpoint_file)
+            
     checkpoint = torch.load(checkpoint_file, map_location="cpu")
     cfg = checkpoint["config"]
     stoi_dict = checkpoint["vocab"]["stoi"]
