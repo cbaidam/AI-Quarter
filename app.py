@@ -103,33 +103,30 @@ class GPTLanguageModel(nn.Module):
 # =========================================================================
 @str_lib.cache_resource
 def load_my_model():
-    checkpoint_file = "model.pt"
+    checkpoint_file = "real_model.pt"  # Změna názvu souboru na disku Streamlitu
     
-    # KOUZLO: Pokud soubor ještě na serveru Streamlitu neleží, stáhne se z vašeho GitHub Release!
-    if not os.path.exists(checkpoint_file):
-        import urllib.request
-        # SEM VLOŽTE VAŠI ZKOPÍROVANOU URL ADRESU Z GITHUB RELEASE!
-        url = "https://://github.comcbaidam/AI-Quarter/releases/download/1.2-6.80Mil-B/model.pt"
-        with str_lib.spinner("📥 Stahuji 43MB model Czechia AI Quarter 1.2 z cloudu..."):
-            urllib.request.urlretrieve(url, checkpoint_file)
+    # NEKOMPROMISNÍ TOTALMAZAČ: Smaže cokoliv s tímto názvem před startem
+    if os.path.exists(checkpoint_file):
+        try:
+            os.remove(checkpoint_file)
+        except:
+            pass
+            
+    import urllib.request
+    url = (
+        "https://"
+        + "://github.com"
+        + "cbaidam/"
+        + "AI-Quarter/"
+        + "releases/"
+        + "download/"
+        + "1.2-6.80Mil-B/"
+        + "model.pt"
+    )
+    with str_lib.spinner("📥 Stahuji 43MB model Czechia AI Quarter 1.2 z cloudu..."):
+        urllib.request.urlretrieve(url, checkpoint_file)
             
     checkpoint = torch.load(checkpoint_file, map_location="cpu")
-    cfg = checkpoint["config"]
-    stoi_dict = checkpoint["vocab"]["stoi"]
-    itos_dict = {i: c for c, i in stoi_dict.items()}
-    
-    model = GPTLanguageModel(
-        vocab_size=cfg["vocab_size"],
-        n_embd=cfg["n_embd"],
-        block_size=cfg["block_size"],
-        n_head=cfg["n_head"],
-        n_layer=cfg["n_layer"]
-    )
-    model.load_state_dict(checkpoint["model_state"])
-    model.eval()
-    return model, (stoi_dict, itos_dict)
-
-model, vocabs = load_my_model()
 
 # =========================================================================
 # DESIGN WEBOVÉHO ROZHRANÍ (STREAMLIT CHAT)
