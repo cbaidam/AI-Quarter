@@ -113,7 +113,7 @@ def load_my_model():
     if not os.path.exists(checkpoint_file):
         import requests
         url = (
-            "https://://github.comcbaidam/AI-Quarter/releases/download/1.2-6.80Mil-B/model.pt"
+        "https://github.com/cbaidam/AI-Quarter/releases/download/1.2-6.80Mil-B/model.pt"
         )
         with str_lib.spinner("📥 Stahuji 43MB model Czechia AI Quarter 1.2 z cloudu..."):
             with requests.get(url, stream=True) as r:
