@@ -1,2 +1,2 @@
-# SnakE
-SnakE game
+# AI Quarter
+AI Quarter models
