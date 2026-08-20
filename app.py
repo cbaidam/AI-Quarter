@@ -2,7 +2,7 @@ import os
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-import streamlit as str_lib  # Přejmenováno, aby se nepletlo se zkratkou stoi
+import streamlit as str_lib
 
 # =========================================================================
 # ARCHITEKTURA MODELU CZECHIA AI QUARTER 1.2 (6.47M / 8 vrstev)
@@ -99,22 +99,19 @@ class GPTLanguageModel(nn.Module):
         return idx
 
 # =========================================================================
-# NAČTENÍ MODELU S CACHOVÁNÍM (Aby se nenačítal při každém kliknutí znova)
-# =========================================================================
-# =========================================================================
-# NAČTENÍ MODELU S CACHOVÁNÍM (Nekompromisní stahovač)
+# NAČTENÍ MODELU S CACHOVÁNÍM (Bezpečný stahovač)
 # =========================================================================
 @str_lib.cache_resource
 def load_my_model():
     checkpoint_file = "real_model.pt"
     
-    # Pokud soubor neexistuje, nebo je to stará poškozená HTML stránka (pod 1MB), smažeme ho
+    # KRIZOVÝ MAZAČ: Pokud soubor na serveru existuje a má méně než 1 MB, vymažeme ho
     if os.path.exists(checkpoint_file) and os.path.getsize(checkpoint_file) < 1000000:
         try: os.remove(checkpoint_file)
         except: pass
             
     if not os.path.exists(checkpoint_file):
-        import urllib.request
+        import requests
         url = (
             "https://"
             + "://github.com"
@@ -126,7 +123,11 @@ def load_my_model():
             + "model.pt"
         )
         with str_lib.spinner("📥 Stahuji 43MB model Czechia AI Quarter 1.2 z cloudu..."):
-            urllib.request.urlretrieve(url, checkpoint_file)
+            with requests.get(url, stream=True) as r:
+                r.raise_for_status()
+                with open(checkpoint_file, 'wb') as f:
+                    for chunk in r.iter_content(chunk_size=8192):
+                        f.write(chunk)
             
     checkpoint = torch.load(checkpoint_file, map_location="cpu")
     cfg = checkpoint["config"]
@@ -144,7 +145,7 @@ def load_my_model():
     model_obj.eval()
     return model_obj, (stoi_dict, itos_dict)
 
-# Spuštění stahování a načtení
+# Aktivace stahování a globální definice proměnné model
 model, vocabs = load_my_model()
 
 # =========================================================================
@@ -155,29 +156,24 @@ str_lib.title("🤖 Czechia AI Quarter 1.2")
 str_lib.caption("Vlastní Small Language Model (SLM) • 6.47M parametrů • 8 vrstev • 18M znaků z Wikipedie")
 
 if model is None:
-    str_lib.error("❌ Soubor 'model.pt' se nepodařilo z cloudu načíst!")
+    str_lib.error("❌ Soubor s váhami modelu se nepodařilo z cloudu načíst!")
 else:
     stoi, itos = vocabs
     encode = lambda s: [stoi[c] for c in s if c in stoi]
     decode = lambda l: "".join(itos[i] for i in l)
 
-    # Inicializace historie chatu v paměti webu
     if "messages" not in str_lib.session_state:
         str_lib.session_state.messages = []
 
-    # Zobrazení předchozích zpráv z historie
     for message in str_lib.session_state.messages:
         with str_lib.chat_message(message["role"]):
             str_lib.markdown(message["content"])
 
-    # Reakce na nový vstup od uživatele
     if podnet := str_lib.chat_input("Napište téma (např. Počítač, Člověk, AI)..."):
-        # Zobrazení zprávy uživatele na webu
         with str_lib.chat_message("user"):
             str_lib.markdown(podnet)
         str_lib.session_state.messages.append({"role": "user", "content": podnet})
 
-        # Generování odpovědi modelu
         with str_lib.chat_message("assistant"):
             encoded_input = encode(podnet)
             if not encoded_input:
@@ -193,4 +189,3 @@ else:
                 str_lib.markdown(odpoved)
                 
         str_lib.session_state.messages.append({"role": "assistant", "content": odpoved})
-
